@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/joho/godotenv"
 	"github.com/nerijusdu/esp-tv-api/src/providers"
 )
 
@@ -13,6 +14,11 @@ const DISPLAY_WIDTH = 128
 const DISPLAY_HEIGHT = 64
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +37,13 @@ func main() {
 	cursor := ""
 
 	r.Get("/api/tv", func(w http.ResponseWriter, r *http.Request) {
-		response := allProviders[index].GetView(cursor)
+		response, error := allProviders[index].GetView(cursor)
+		if error != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(error.Error()))
+			return
+		}
+
 		view := response.View
 
 		if response.NextCursor == "" {

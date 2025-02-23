@@ -6,7 +6,7 @@ type View struct {
 }
 
 type Provider interface {
-	GetView(cursor string) ViewResponse
+	GetView(cursor string) (ViewResponse, error)
 }
 
 type ViewResponse struct {
