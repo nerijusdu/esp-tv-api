@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP TV Preview</title>
+</head>
+<body>
+    <h1>ESP TV Preview</h1>
+    <div id="preview"></div>
+    <style>
+      body {
+        color: white;
+        background: black;
+      }
+      .white {
+        background: white;
+        width: 10px;
+        height: 10px;
+      }
+      .black {
+        background: black;
+        width: 10px;
+        height: 10px;
+      }
+      #preview {
+        display: grid;
+        grid-template-columns: repeat(128, 10px);
+        grid-template-rows: repeat(64, 10px);
+      }
+    </style>
+    <script>
+      async function getView() {
+        const result = await fetch('/api/tv');
+        if (result.ok) {
+          const data = await result.text();
+          const refreshAfter = result.headers.get('X-Refresh-After');
+          return { data: [...data], refreshAfter };
+        } else {
+          return { data: [], refreshAfter: 5000 };
+        }
+      }
+
+      async function updateView() {
+        const { data, refreshAfter } = await getView();
+        const preview = document.getElementById('preview');
+        preview.innerHTML = '';
+        for (const item of data) {
+          const div = document.createElement('div');
+          div.className = item === '1' ? 'white' : 'black';
+          preview.appendChild(div);
+        }
+        setTimeout(updateView, refreshAfter);
+      }
+
+      updateView();
+    </script>
+</body>

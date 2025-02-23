@@ -29,7 +29,6 @@ func (p *PosthogProvider) GetView(cursor string) ViewResponse {
 		}
 	}
 
-	fmt.Println("Cursor", cursor, nextCursor)
 	return ViewResponse{
 		View:       view,
 		Cursor:     cursor,
