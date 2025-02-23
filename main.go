@@ -83,6 +83,11 @@ func main() {
 		w.Write(view.Data)
 	})
 
-	fmt.Println("Listening on :8080")
-	http.ListenAndServe(":8080", r)
+	port := 8080
+	if config.Server.Port > 0 {
+		port = config.Server.Port
+	}
+
+	fmt.Printf("Listening on :%d\n", port)
+	http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 }

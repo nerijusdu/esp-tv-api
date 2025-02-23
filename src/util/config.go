@@ -7,6 +7,9 @@ import (
 
 type Config struct {
 	Providers map[string]any `json:"providers"`
+	Server    struct {
+		Port int `json:"port"`
+	} `json:"server"`
 }
 
 func LoadConfig() (Config, error) {
