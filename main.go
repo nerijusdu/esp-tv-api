@@ -8,13 +8,20 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	"github.com/nerijusdu/esp-tv-api/src/providers"
+	"github.com/nerijusdu/esp-tv-api/src/util"
 )
 
-const DISPLAY_WIDTH = 128
-const DISPLAY_HEIGHT = 64
+var providerMap = map[string]providers.Provider{
+	"posthog": &providers.PosthogProvider{},
+}
 
 func main() {
 	err := godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
+
+	config, err := util.LoadConfig()
 	if err != nil {
 		panic(err)
 	}
@@ -30,11 +37,21 @@ func main() {
 		w.Write([]byte("OK"))
 	})
 
-	allProviders := []providers.Provider{
-		&providers.PosthogProvider{}, // TODO: read from config
-	}
-	for _, provider := range allProviders {
-		provider.Init()
+	allProviders := []providers.Provider{}
+	for name := range config.Providers {
+		provider, found := providerMap[name]
+		if !found {
+			fmt.Printf("Provider %s not found\n", name)
+			continue
+		}
+
+		err := provider.Init(config.Providers[name])
+		if err != nil {
+			fmt.Printf("Provider %s init failed: %s\n", name, err)
+			continue
+		}
+
+		allProviders = append(allProviders, provider)
 	}
 
 	index := 0

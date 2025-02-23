@@ -1,0 +1,18 @@
+{
+  "providers": {
+    "posthog": {
+      "insights": [
+        {
+          "title": "lingvistas.lt",
+          "projectId": "43890",
+          "insightId": "687096"
+        },
+        {
+          "title": "manoakimirka.lt",
+          "projectId": "41142",
+          "insightId": "645533"
+        }
+      ]
+    }
+  }
+}

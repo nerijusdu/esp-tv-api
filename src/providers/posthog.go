@@ -16,26 +16,18 @@ import (
 )
 
 type PosthogProvider struct {
-	cache *cache.Cache
+	cache  *cache.Cache
+	config PosthogConfig
+}
+
+type PosthogConfig struct {
+	Insights []PosthogSite `json:"insights"`
 }
 
 type PosthogSite struct {
-	title     string
-	projectId string
-	insightId string
-}
-
-var pages = map[string]PosthogSite{
-	"0": { // TODO: read from config
-		title:     "lingvistas.lt",
-		projectId: "43890",
-		insightId: "687096",
-	},
-	"1": {
-		title:     "manoakimirka.lt",
-		projectId: "41142",
-		insightId: "645533",
-	},
+	Title     string `json:"title"`
+	ProjectId string `json:"projectId"`
+	InsightId string `json:"insightId"`
 }
 
 type PosthogInsightResponse struct {
@@ -108,7 +100,7 @@ func (p *PosthogProvider) renderData(data PosthogInsightResponse, site PosthogSi
 
 	dc := gg.NewContext(w, h)
 	dc.SetColor(color.White)
-	dc.DrawString(site.title, 0, h-1)
+	dc.DrawString(site.Title, 0, h-1)
 	dc.DrawString(fmt.Sprint(maxValue), w-float64(maxValueTextSize), 9)
 
 	dc.DrawLine(0, h-11.5, w, h-11.5)
@@ -153,12 +145,12 @@ func (p *PosthogProvider) GetView(cursor string) (ViewResponse, error) {
 		NextCursor: fmt.Sprint(nextCursor),
 		View:       view,
 	}
-	if nextCursor >= len(pages) {
+	if nextCursor >= len(p.config.Insights) {
 		result.NextCursor = ""
 	}
 
-	site := pages[cursor]
-	data, err := p.getSiteStats(site.projectId, site.insightId)
+	site := p.config.Insights[intCursor]
+	data, err := p.getSiteStats(site.ProjectId, site.InsightId)
 	if err != nil {
 		return result, err
 	}
@@ -171,6 +163,15 @@ func (p *PosthogProvider) GetView(cursor string) (ViewResponse, error) {
 	return result, nil
 }
 
-func (p *PosthogProvider) Init() {
+func (p *PosthogProvider) Init(config any) error {
 	p.cache = cache.New(15*time.Minute, 30*time.Minute)
+
+	c, err := util.CastConfig[PosthogConfig](config)
+	if err != nil {
+		return err
+	}
+
+	p.config = c
+
+	return nil
 }
