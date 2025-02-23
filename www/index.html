@@ -27,6 +27,8 @@
         display: grid;
         grid-template-columns: repeat(128, 10px);
         grid-template-rows: repeat(64, 10px);
+        width: fit-content;
+        border: 1px solid darkblue;
       }
     </style>
     <script>
@@ -50,7 +52,7 @@
           div.className = item === '1' ? 'white' : 'black';
           preview.appendChild(div);
         }
-        setTimeout(updateView, refreshAfter);
+        // setTimeout(updateView, refreshAfter);
       }
 
       updateView();

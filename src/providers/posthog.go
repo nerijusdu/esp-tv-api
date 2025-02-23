@@ -7,13 +7,17 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/fogleman/gg"
 	"github.com/nerijusdu/esp-tv-api/src/constants"
 	"github.com/nerijusdu/esp-tv-api/src/util"
+	"github.com/patrickmn/go-cache"
 )
 
-type PosthogProvider struct{}
+type PosthogProvider struct {
+	cache *cache.Cache
+}
 
 type PosthogSite struct {
 	title     string
@@ -22,7 +26,7 @@ type PosthogSite struct {
 }
 
 var pages = map[string]PosthogSite{
-	"0": {
+	"0": { // TODO: read from config
 		title:     "lingvistas.lt",
 		projectId: "43890",
 		insightId: "687096",
@@ -43,8 +47,14 @@ type PosthogInsightResponse struct {
 }
 
 func (p *PosthogProvider) getSiteStats(projectId string, insightId string) (PosthogInsightResponse, error) {
+	key := fmt.Sprintf("insight-%s-%s", projectId, insightId)
+	val, found := p.cache.Get(key)
+	if found {
+		return val.(PosthogInsightResponse), nil
+	}
+
 	token := os.Getenv("POSTHOG_API_KEY")
-	url := fmt.Sprintf("https://eu.i.posthog.com/api/projects/%s/insights/%s", projectId, insightId)
+	url := fmt.Sprintf("https://eu.i.posthog.com/api/projects/%s/insights/%s?refresh=blocking", projectId, insightId)
 	result := PosthogInsightResponse{}
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -68,6 +78,8 @@ func (p *PosthogProvider) getSiteStats(projectId string, insightId string) (Post
 	if err != nil {
 		return result, err
 	}
+
+	p.cache.Set(key, result, cache.DefaultExpiration)
 
 	return result, nil
 }
@@ -157,4 +169,8 @@ func (p *PosthogProvider) GetView(cursor string) (ViewResponse, error) {
 	}
 
 	return result, nil
+}
+
+func (p *PosthogProvider) Init() {
+	p.cache = cache.New(15*time.Minute, 30*time.Minute)
 }

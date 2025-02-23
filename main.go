@@ -31,8 +31,12 @@ func main() {
 	})
 
 	allProviders := []providers.Provider{
-		&providers.PosthogProvider{},
+		&providers.PosthogProvider{}, // TODO: read from config
 	}
+	for _, provider := range allProviders {
+		provider.Init()
+	}
+
 	index := 0
 	cursor := ""
 
