@@ -3,6 +3,12 @@
     "port": 8080
   },
   "providers": {
+    "image": {
+      "urls": [
+        "https://nerijusdulke.lt/data/images/bingo-bot.png",
+        "https://nerijusdulke.lt/data/images/release-button-pic.jpg"
+      ]
+    },
     "time": {},
     "posthog": {
       "insights": [

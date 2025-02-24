@@ -12,6 +12,7 @@ import (
 )
 
 var providerMap = map[string]providers.Provider{
+	"image":   &providers.ImageProvider{},
 	"time":    &providers.TimeProvider{},
 	"posthog": &providers.PosthogProvider{},
 }
