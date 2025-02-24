@@ -38,6 +38,57 @@ type PosthogInsightResponse struct {
 	} `json:"result"`
 }
 
+func (p *PosthogProvider) GetView(cursor string) (ViewResponse, error) {
+	view := View{
+		Data:         make([]byte, constants.DISPLAY_SIZE),
+		RefreshAfter: 5000,
+	}
+	if cursor == "" {
+		cursor = "0"
+	}
+
+	intCursor, err := strconv.Atoi(cursor)
+	if err != nil {
+		return ViewResponse{}, fmt.Errorf("invalid cursor: %s", cursor)
+	}
+	nextCursor := intCursor + 1
+
+	result := ViewResponse{
+		Cursor:     cursor,
+		NextCursor: fmt.Sprint(nextCursor),
+		View:       view,
+	}
+	if nextCursor >= len(p.config.Insights) {
+		result.NextCursor = ""
+	}
+
+	site := p.config.Insights[intCursor]
+	data, err := p.getSiteStats(site.ProjectId, site.InsightId)
+	if err != nil {
+		return result, err
+	}
+
+	err = p.renderData(data, site, &view.Data)
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
+}
+
+func (p *PosthogProvider) Init(config any) error {
+	p.cache = cache.New(15*time.Minute, 30*time.Minute)
+
+	c, err := util.CastConfig[PosthogConfig](config)
+	if err != nil {
+		return err
+	}
+
+	p.config = c
+
+	return nil
+}
+
 func (p *PosthogProvider) getSiteStats(projectId string, insightId string) (PosthogInsightResponse, error) {
 	key := fmt.Sprintf("insight-%s-%s", projectId, insightId)
 	val, found := p.cache.Get(key)
@@ -121,57 +172,6 @@ func (p *PosthogProvider) renderData(data PosthogInsightResponse, site PosthogSi
 	dc.Stroke()
 
 	util.ImageToBytes(dc, result)
-
-	return nil
-}
-
-func (p *PosthogProvider) GetView(cursor string) (ViewResponse, error) {
-	view := View{
-		Data:         make([]byte, constants.DISPLAY_SIZE),
-		RefreshAfter: 5000,
-	}
-	if cursor == "" {
-		cursor = "0"
-	}
-
-	intCursor, err := strconv.Atoi(cursor)
-	if err != nil {
-		return ViewResponse{}, fmt.Errorf("invalid cursor: %s", cursor)
-	}
-	nextCursor := intCursor + 1
-
-	result := ViewResponse{
-		Cursor:     cursor,
-		NextCursor: fmt.Sprint(nextCursor),
-		View:       view,
-	}
-	if nextCursor >= len(p.config.Insights) {
-		result.NextCursor = ""
-	}
-
-	site := p.config.Insights[intCursor]
-	data, err := p.getSiteStats(site.ProjectId, site.InsightId)
-	if err != nil {
-		return result, err
-	}
-
-	err = p.renderData(data, site, &view.Data)
-	if err != nil {
-		return result, err
-	}
-
-	return result, nil
-}
-
-func (p *PosthogProvider) Init(config any) error {
-	p.cache = cache.New(15*time.Minute, 30*time.Minute)
-
-	c, err := util.CastConfig[PosthogConfig](config)
-	if err != nil {
-		return err
-	}
-
-	p.config = c
 
 	return nil
 }
