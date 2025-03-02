@@ -54,6 +54,7 @@ func (p *BskyProvider) GetView(cursor string) (ViewResponse, error) {
 			return ViewResponse{}, err
 		}
 
+		p.currentPost = nil
 		return ViewResponse{
 			Cursor:     cursor,
 			NextCursor: "",
