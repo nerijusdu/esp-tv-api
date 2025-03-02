@@ -6,9 +6,10 @@ import (
 )
 
 type Config struct {
-	Providers map[string]any `json:"providers"`
-	ViewDelay int            `json:"viewDelay"`
-	Server    struct {
+	Providers   map[string]any `json:"providers"`
+	ViewDelay   int            `json:"viewDelay"`
+	LogRequests bool           `json:"logRequests"`
+	Server      struct {
 		Port int `json:"port"`
 	} `json:"server"`
 }
