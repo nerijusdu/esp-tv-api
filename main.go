@@ -78,6 +78,9 @@ func main() {
 			if index >= len(allProviders) {
 				index = 0
 			}
+			if config.ViewDelay > 0 {
+				view.RefreshAfter = config.ViewDelay
+			}
 		} else {
 			cursor = response.NextCursor
 		}
