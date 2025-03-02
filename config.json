@@ -4,7 +4,8 @@
   },
   "providers": {
     "bsky": {
-      "feed": "at://did:plc:oio4hkxaop4ao4wz2pp3f4cr/app.bsky.feed.generator/build"
+      "feed": "at://did:plc:oio4hkxaop4ao4wz2pp3f4cr/app.bsky.feed.generator/build",
+      "renderImages": true
     },
     "image": {
       "urls": [

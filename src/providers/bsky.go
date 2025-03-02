@@ -22,7 +22,8 @@ type BskyProvider struct {
 }
 
 type BskyConfig struct {
-	Feed string `json:"feed"`
+	Feed         string `json:"feed"`
+	RenderImages bool   `json:"renderImages"`
 }
 
 func (p *BskyProvider) Init(config any) error {
@@ -36,6 +37,8 @@ func (p *BskyProvider) Init(config any) error {
 	return nil
 }
 
+const MAX_LINES = 4
+
 func (p *BskyProvider) GetView(cursor string) (ViewResponse, error) {
 	if p.currentPost == nil {
 		res, err := getBskyPost(p.config.Feed)
@@ -45,50 +48,47 @@ func (p *BskyProvider) GetView(cursor string) (ViewResponse, error) {
 		p.currentPost = res
 	}
 
-	dc := gg.NewContext(constants.DISPLAY_WIDTH, constants.DISPLAY_HEIGHT)
-	dc.SetColor(color.White)
+	if cursor == "image" {
+		data, err := drawImage(p.currentPost.Embed.Images[0].Thumb)
+		if err != nil {
+			return ViewResponse{}, err
+		}
 
-	author := p.currentPost.Author.DisplayName
-	if author == "" {
-		author = p.currentPost.Author.Handle
+		return ViewResponse{
+			Cursor:     cursor,
+			NextCursor: "",
+			View: View{
+				RefreshAfter: 5000,
+				Data:         *data,
+			},
+		}, nil
 	}
-	stats := fmt.Sprintf("%dL %dC", p.currentPost.LikeCount, p.currentPost.ReplyCount)
-	postText := strings.ReplaceAll(p.currentPost.Record.Text, "\n", "")
 
+	author, stats, postText := p.getPostText()
+
+	dc := gg.NewContext(constants.DISPLAY_WIDTH, constants.DISPLAY_HEIGHT)
 	pages := dc.WordWrap(postText, constants.DISPLAY_WIDTH)
 	paging, err := util.ParsePaging(cursor, len(pages))
 	if err != nil {
 		return ViewResponse{}, err
 	}
 
-	dc.DrawString(author, 0, 9)
-	dc.DrawStringAnchored(stats, constants.DISPLAY_WIDTH, 9, 1, 0)
-	dc.DrawLine(0, 10.5, constants.DISPLAY_WIDTH, 10.5)
-
-	maxLines := 4
-	for i, line := range pages[paging.IntCursor:] {
-		if i >= maxLines {
-			break
-		}
-
-		dc.DrawString(line, 0, 21+float64(i)*12)
-	}
-
-	dc.Stroke()
-
-	if len(pages) <= maxLines {
+	refreshAfter := 1000
+	if len(pages) <= MAX_LINES {
 		paging.NextCursor = ""
 	}
-
-	refreshAfter := 1000
 	if paging.NextCursor == "" {
-		p.currentPost = nil
+		if p.config.RenderImages && len(p.currentPost.Embed.Images) > 0 {
+			paging.NextCursor = "image"
+		} else {
+			p.currentPost = nil
+		}
 		refreshAfter = 5000
-	}
-	if paging.IntCursor == 0 {
+	} else if paging.IntCursor == 0 {
 		refreshAfter = 3000
 	}
 
+	renderPostText(dc, author, stats, pages[paging.IntCursor:])
 	bytes := util.GraphicToBytes(dc)
 
 	return ViewResponse{
@@ -99,6 +99,31 @@ func (p *BskyProvider) GetView(cursor string) (ViewResponse, error) {
 			Data:         *bytes,
 		},
 	}, nil
+}
+
+func (p *BskyProvider) getPostText() (author string, stats string, postText string) {
+	author = p.currentPost.Author.DisplayName
+	if author == "" {
+		author = p.currentPost.Author.Handle
+	}
+	stats = fmt.Sprintf("%dL %dC", p.currentPost.LikeCount, p.currentPost.ReplyCount)
+	postText = strings.ReplaceAll(p.currentPost.Record.Text, "\n", "")
+	return
+}
+
+func renderPostText(dc *gg.Context, author, stats string, pages []string) {
+	dc.SetColor(color.White)
+	dc.DrawString(author, 0, 9)
+	dc.DrawStringAnchored(stats, constants.DISPLAY_WIDTH, 9, 1, 0)
+	dc.DrawLine(0, 10.5, constants.DISPLAY_WIDTH, 10.5)
+	for i, line := range pages {
+		if i >= MAX_LINES {
+			break
+		}
+		dc.DrawString(line, 0, 21+float64(i)*12)
+	}
+	dc.Stroke()
+
 }
 
 func getBskyPost(feed string) (*BskyPost, error) {
