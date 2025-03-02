@@ -83,7 +83,7 @@ func (p *BskyProvider) GetView(cursor string) (ViewResponse, error) {
 		} else {
 			p.currentPost = nil
 		}
-		refreshAfter = 5000
+		refreshAfter = 3000
 	} else if paging.IntCursor == 0 {
 		refreshAfter = 3000
 	}
