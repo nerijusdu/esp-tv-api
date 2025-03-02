@@ -3,6 +3,9 @@
     "port": 8080
   },
   "providers": {
+    "bsky": {
+      "feed": "at://did:plc:oio4hkxaop4ao4wz2pp3f4cr/app.bsky.feed.generator/build"
+    },
     "image": {
       "urls": [
         "https://nerijusdulke.lt/data/images/bingo-bot.png",

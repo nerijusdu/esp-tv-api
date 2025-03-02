@@ -1,10 +1,8 @@
 package providers
 
 import (
-	"fmt"
 	"image"
 	"net/http"
-	"strconv"
 
 	"github.com/fogleman/gg"
 	"github.com/nerijusdu/esp-tv-api/src/constants"
@@ -28,37 +26,24 @@ func (p *ImageProvider) Init(config any) error {
 }
 
 func (p *ImageProvider) GetView(cursor string) (ViewResponse, error) {
-	response := ViewResponse{
-		Cursor:     cursor,
-		NextCursor: "",
+	paging, err := util.ParsePaging(cursor, len(p.config.Urls))
+	if err != nil {
+		return ViewResponse{}, err
+	}
+
+	res, err := drawImage(p.config.Urls[paging.IntCursor])
+	if err != nil {
+		return ViewResponse{}, err
+	}
+
+	return ViewResponse{
+		Cursor:     paging.Cursor,
+		NextCursor: paging.NextCursor,
 		View: View{
 			RefreshAfter: 5000,
+			Data:         *res,
 		},
-	}
-
-	if cursor == "" {
-		cursor = "0"
-	}
-
-	intCursor, err := strconv.Atoi(cursor)
-	if err != nil {
-		return response, err
-	}
-
-	res, err := drawImage(p.config.Urls[intCursor])
-	if err != nil {
-		return response, err
-	}
-
-	response.View.Data = *res
-
-	intCursor++
-	response.NextCursor = fmt.Sprint(intCursor)
-	if intCursor >= len(p.config.Urls) {
-		response.NextCursor = ""
-	}
-
-	return response, nil
+	}, nil
 }
 
 func drawImage(url string) (*[]byte, error) {

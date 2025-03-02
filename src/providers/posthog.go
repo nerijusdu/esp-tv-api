@@ -6,7 +6,6 @@ import (
 	"image/color"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/fogleman/gg"
@@ -24,44 +23,23 @@ type PosthogConfig struct {
 	Insights []PosthogSite `json:"insights"`
 }
 
-type PosthogSite struct {
-	Title     string `json:"title"`
-	ProjectId string `json:"projectId"`
-	InsightId string `json:"insightId"`
-}
-
-type PosthogInsightResponse struct {
-	Result []struct {
-		Data   []int    `json:"data"`
-		Labels []string `json:"labels"`
-		Days   []string `json:"days"`
-	} `json:"result"`
-}
-
 func (p *PosthogProvider) GetView(cursor string) (ViewResponse, error) {
 	view := View{
 		RefreshAfter: 5000,
 	}
-	if cursor == "" {
-		cursor = "0"
-	}
 
-	intCursor, err := strconv.Atoi(cursor)
+	paging, err := util.ParsePaging(cursor, len(p.config.Insights))
 	if err != nil {
-		return ViewResponse{}, fmt.Errorf("invalid cursor: %s", cursor)
+		return ViewResponse{}, err
 	}
-	nextCursor := intCursor + 1
 
 	result := ViewResponse{
-		Cursor:     cursor,
-		NextCursor: fmt.Sprint(nextCursor),
+		Cursor:     paging.Cursor,
+		NextCursor: paging.NextCursor,
 		View:       view,
 	}
-	if nextCursor >= len(p.config.Insights) {
-		result.NextCursor = ""
-	}
 
-	site := p.config.Insights[intCursor]
+	site := p.config.Insights[paging.IntCursor]
 	data, err := p.getSiteStats(site.ProjectId, site.InsightId)
 	if err != nil {
 		return result, err
