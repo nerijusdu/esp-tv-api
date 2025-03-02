@@ -32,7 +32,6 @@ func (p *ImageProvider) GetView(cursor string) (ViewResponse, error) {
 		Cursor:     cursor,
 		NextCursor: "",
 		View: View{
-			Data:         make([]byte, constants.DISPLAY_SIZE),
 			RefreshAfter: 5000,
 		},
 	}
@@ -46,10 +45,12 @@ func (p *ImageProvider) GetView(cursor string) (ViewResponse, error) {
 		return response, err
 	}
 
-	err = drawImage(p.config.Urls[intCursor], &response.View.Data)
+	res, err := drawImage(p.config.Urls[intCursor])
 	if err != nil {
 		return response, err
 	}
+
+	response.View.Data = *res
 
 	intCursor++
 	response.NextCursor = fmt.Sprint(intCursor)
@@ -60,16 +61,17 @@ func (p *ImageProvider) GetView(cursor string) (ViewResponse, error) {
 	return response, nil
 }
 
-func drawImage(url string, result *[]byte) error {
+func drawImage(url string) (*[]byte, error) {
+	result := []byte{}
 	res, err := http.Get(url)
 	if err != nil {
-		return err
+		return &result, err
 	}
 	defer res.Body.Close()
 
 	img, _, err := image.Decode(res.Body)
 	if err != nil {
-		return err
+		return &result, err
 	}
 
 	dc := gg.NewContext(constants.DISPLAY_WIDTH, constants.DISPLAY_HEIGHT)
@@ -81,7 +83,5 @@ func drawImage(url string, result *[]byte) error {
 	dc.DrawImage(dst, 0, 0)
 	dc.Stroke()
 
-	util.ImageToBytes(dc, result)
-
-	return nil
+	return util.GraphicToBytes(dc), nil
 }

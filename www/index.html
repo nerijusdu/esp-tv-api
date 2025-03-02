@@ -8,6 +8,7 @@
 <body>
     <h1>ESP TV Preview</h1>
     <div id="preview"></div>
+    <button onclick="toggleRefreshing()">Toggle Refreshing</button>
     <style>
       body {
         color: white;
@@ -30,8 +31,14 @@
         width: fit-content;
         border: 1px solid darkblue;
       }
+      .debug {
+        background: red !important;
+        width: 10px;
+        height: 10px;
+      }
     </style>
     <script>
+      let isRefreshing = false;
       async function getView() {
         const result = await fetch('/api/tv');
         if (result.ok) {
@@ -47,12 +54,28 @@
         const { data, refreshAfter } = await getView();
         const preview = document.getElementById('preview');
         preview.innerHTML = '';
+        const maxSize = 128*64;
+        let i = 0;
         for (const item of data) {
           const div = document.createElement('div');
           div.className = item === '1' ? 'white' : 'black';
           preview.appendChild(div);
+          i++;
+
+          if (i >= maxSize) {
+            break;
+          }
         }
-        // setTimeout(updateView, refreshAfter);
+        if (isRefreshing) {
+          setTimeout(updateView, refreshAfter);
+        }
+      }
+
+      function toggleRefreshing() {
+        isRefreshing = !isRefreshing;
+        if (isRefreshing) {
+          updateView();
+        }
       }
 
       updateView();

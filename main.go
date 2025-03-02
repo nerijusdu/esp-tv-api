@@ -12,6 +12,7 @@ import (
 )
 
 var providerMap = map[string]providers.Provider{
+	"video":   &providers.VideoProvider{},
 	"image":   &providers.ImageProvider{},
 	"time":    &providers.TimeProvider{},
 	"posthog": &providers.PosthogProvider{},
@@ -62,6 +63,7 @@ func main() {
 	r.Get("/api/tv", func(w http.ResponseWriter, r *http.Request) {
 		response, error := allProviders[index].GetView(cursor)
 		if error != nil {
+			fmt.Printf("Provider %d failed: %s\n", index, error)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(error.Error()))
 			return

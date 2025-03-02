@@ -20,20 +20,21 @@ func (p *TimeProvider) GetView(cursor string) (ViewResponse, error) {
 		Cursor:     cursor,
 		NextCursor: "",
 		View: View{
-			Data:         make([]byte, constants.DISPLAY_SIZE),
-			RefreshAfter: 5000,
+			RefreshAfter: 15000,
 		},
 	}
 
-	err := drawTime(&response.View.Data)
+	res, err := drawTime()
 	if err != nil {
 		return response, err
 	}
 
+	response.View.Data = *res
+
 	return response, nil
 }
 
-func drawTime(result *[]byte) error {
+func drawTime() (*[]byte, error) {
 	timeText := time.Now().Format("15:04")
 	dateText := time.Now().Format("2006-01-02")
 	dayOfWeek := time.Now().Weekday().String()
@@ -44,7 +45,7 @@ func drawTime(result *[]byte) error {
 	dc.DrawStringAnchored(dayOfWeek, constants.DISPLAY_WIDTH/2, constants.DISPLAY_HEIGHT/2+15, 0.5, 0.5)
 	dc.Stroke()
 
-	util.ImageToBytes(dc, result)
+	res := util.GraphicToBytes(dc)
 
-	return nil
+	return res, nil
 }

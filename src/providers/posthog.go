@@ -40,7 +40,6 @@ type PosthogInsightResponse struct {
 
 func (p *PosthogProvider) GetView(cursor string) (ViewResponse, error) {
 	view := View{
-		Data:         make([]byte, constants.DISPLAY_SIZE),
 		RefreshAfter: 5000,
 	}
 	if cursor == "" {
@@ -68,10 +67,12 @@ func (p *PosthogProvider) GetView(cursor string) (ViewResponse, error) {
 		return result, err
 	}
 
-	err = p.renderData(data, site, &view.Data)
+	res, err := p.renderData(data, site)
 	if err != nil {
 		return result, err
 	}
+
+	result.View.Data = *res
 
 	return result, nil
 }
@@ -127,9 +128,9 @@ func (p *PosthogProvider) getSiteStats(projectId string, insightId string) (Post
 	return result, nil
 }
 
-func (p *PosthogProvider) renderData(data PosthogInsightResponse, site PosthogSite, result *[]byte) error {
+func (p *PosthogProvider) renderData(data PosthogInsightResponse, site PosthogSite) (*[]byte, error) {
 	if len(data.Result) == 0 {
-		return nil
+		return &[]byte{}, nil
 	}
 
 	const w = constants.DISPLAY_WIDTH
@@ -171,7 +172,5 @@ func (p *PosthogProvider) renderData(data PosthogInsightResponse, site PosthogSi
 
 	dc.Stroke()
 
-	util.ImageToBytes(dc, result)
-
-	return nil
+	return util.GraphicToBytes(dc), nil
 }
