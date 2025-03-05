@@ -5,6 +5,10 @@
   "viewDelay": 10000,
   "logRequests": true,
   "providers": {
+    "weather": {
+      "location": "Vilnius,lt",
+      "units": "metric"
+    },
     "bsky": {
       "feed": "at://did:plc:oio4hkxaop4ao4wz2pp3f4cr/app.bsky.feed.generator/build",
       "renderImages": true

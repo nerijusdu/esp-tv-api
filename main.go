@@ -17,6 +17,7 @@ var providerMap = map[string]providers.Provider{
 	"image":   &providers.ImageProvider{},
 	"time":    &providers.TimeProvider{},
 	"posthog": &providers.PosthogProvider{},
+	"weather": &providers.WeatherProvider{},
 }
 
 func main() {
