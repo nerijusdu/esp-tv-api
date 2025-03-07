@@ -66,8 +66,8 @@ func (w *WeatherProvider) GetView(cursor string) (ViewResponse, error) {
 			Data:         img,
 			RefreshAfter: 10000,
 		},
-		Cursor:     "0",
-		NextCursor: "0",
+		Cursor:     cursor,
+		NextCursor: "",
 	}, nil
 }
 
