@@ -27,6 +27,10 @@ type WeatherConfig struct {
 	Units    string `json:"units"`
 }
 
+func (w *WeatherProvider) GetName() string {
+	return "weather"
+}
+
 func (w *WeatherProvider) Init(config any) error {
 	cfg, err := util.CastConfig[WeatherConfig](config)
 	if err != nil {

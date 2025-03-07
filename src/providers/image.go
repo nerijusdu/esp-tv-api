@@ -18,6 +18,10 @@ type ImageConfig struct {
 	Urls []string `json:"urls"`
 }
 
+func (p *ImageProvider) GetName() string {
+	return "image"
+}
+
 func (p *ImageProvider) Init(config any) error {
 	c, err := util.CastConfig[ImageConfig](config)
 	p.config = c

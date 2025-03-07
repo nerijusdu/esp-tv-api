@@ -15,6 +15,10 @@ func (p *TimeProvider) Init(config any) error {
 	return nil
 }
 
+func (p *TimeProvider) GetName() string {
+	return "time"
+}
+
 func (p *TimeProvider) GetView(cursor string) (ViewResponse, error) {
 	response := ViewResponse{
 		Cursor:     cursor,

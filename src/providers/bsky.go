@@ -26,6 +26,10 @@ type BskyConfig struct {
 	RenderImages bool   `json:"renderImages"`
 }
 
+func (p *BskyProvider) GetName() string {
+	return "bsky"
+}
+
 func (p *BskyProvider) Init(config any) error {
 	c, err := util.CastConfig[BskyConfig](config)
 	if err != nil {

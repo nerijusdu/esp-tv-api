@@ -67,9 +67,13 @@ func main() {
 	r.Get("/api/tv", func(w http.ResponseWriter, r *http.Request) {
 		response, error := allProviders[index].GetView(cursor)
 		if error != nil {
-			fmt.Printf("Provider %d failed: %s\n", index, error)
+			fmt.Printf("Provider %s failed: %s\n", allProviders[index].GetName(), error)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(error.Error()))
+			index++
+			if index >= len(allProviders) {
+				index = 0
+			}
 			return
 		}
 

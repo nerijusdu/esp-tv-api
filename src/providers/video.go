@@ -19,6 +19,10 @@ func (p *VideoProvider) Init(config any) error {
 	return nil
 }
 
+func (p *VideoProvider) GetName() string {
+	return "video"
+}
+
 func (p *VideoProvider) GetView(cursor string) (ViewResponse, error) {
 	// use this ffmpeg command to generate gif from video
 	// ffmpeg -i input.mp4 -f lavfi -i color=gray:s=1280x720 -f lavfi -i color=black:s=1280x720 -f lavfi -i color=white:s=1280x720 -filter_complex threshold,scale=128:64,fps=5 -y output.gif

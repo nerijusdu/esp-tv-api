@@ -23,6 +23,10 @@ type PosthogConfig struct {
 	Insights []PosthogSite `json:"insights"`
 }
 
+func (p *PosthogProvider) GetName() string {
+	return "posthog"
+}
+
 func (p *PosthogProvider) GetView(cursor string) (ViewResponse, error) {
 	view := View{
 		RefreshAfter: 5000,

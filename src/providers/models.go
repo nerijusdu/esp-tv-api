@@ -8,6 +8,7 @@ type View struct {
 type Provider interface {
 	GetView(cursor string) (ViewResponse, error)
 	Init(config any) error
+	GetName() string
 }
 
 type ViewResponse struct {
