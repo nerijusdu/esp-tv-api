@@ -112,12 +112,16 @@ func (p *BskyProvider) getPostText() (author string, stats string, postText stri
 		author = p.currentPost.Author.Handle
 	}
 	stats = fmt.Sprintf("%dL %dC", p.currentPost.LikeCount, p.currentPost.ReplyCount)
-	postText = strings.ReplaceAll(p.currentPost.Record.Text, "\n", "")
+	postText = strings.ReplaceAll(p.currentPost.Record.Text, "\n", " ")
+	postText = strings.ReplaceAll(postText, "  ", " ")
 	return
 }
 
 func renderPostText(dc *gg.Context, author, stats string, pages []string) {
 	dc.SetColor(color.White)
+	if len(author) > 12 {
+		author = author[:11] + ".."
+	}
 	dc.DrawString(author, 0, 9)
 	dc.DrawStringAnchored(stats, constants.DISPLAY_WIDTH, 9, 1, 0)
 	dc.DrawLine(0, 10.5, constants.DISPLAY_WIDTH, 10.5)

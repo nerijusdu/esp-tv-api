@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"image/color"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -97,7 +98,8 @@ func (p *PosthogProvider) getSiteStats(projectId string, insightId string) (Post
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return result, fmt.Errorf("unexpected status code: %d", res.StatusCode)
+		body, _ := io.ReadAll(res.Body)
+		return result, fmt.Errorf("unexpected status code: %d; body: %s", res.StatusCode, string(body))
 	}
 
 	err = json.NewDecoder(res.Body).Decode(&result)

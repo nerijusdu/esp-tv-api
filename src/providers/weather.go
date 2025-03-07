@@ -16,15 +16,15 @@ import (
 )
 
 type WeatherProvider struct {
-	ApiKey   string
-	Location string
-	Units    string
-	cache    *cache.Cache
+	apiKey string
+	config WeatherConfig
+	cache  *cache.Cache
 }
 
 type WeatherConfig struct {
 	Location string `json:"location"`
 	Units    string `json:"units"`
+	TimeZone string `json:"timeZone"`
 }
 
 func (w *WeatherProvider) GetName() string {
@@ -32,7 +32,7 @@ func (w *WeatherProvider) GetName() string {
 }
 
 func (w *WeatherProvider) Init(config any) error {
-	cfg, err := util.CastConfig[WeatherConfig](config)
+	c, err := util.CastConfig[WeatherConfig](config)
 	if err != nil {
 		return err
 	}
@@ -41,12 +41,11 @@ func (w *WeatherProvider) Init(config any) error {
 	if apiKey == "" {
 		return fmt.Errorf("OPENWEATHERMAP_API_KEY environment variable is not set")
 	}
-	w.ApiKey = apiKey
-	w.Location = cfg.Location
 
-	w.Units = "metric"
-	if cfg.Units != "" {
-		w.Units = cfg.Units
+	w.apiKey = apiKey
+	w.config = c
+	if w.config.Units == "" {
+		w.config.Units = "metric"
 	}
 
 	w.cache = cache.New(30*time.Minute, 1*time.Hour)
@@ -76,16 +75,16 @@ func (w *WeatherProvider) GetView(cursor string) (ViewResponse, error) {
 }
 
 func (w *WeatherProvider) getWeatherData() (WeatherResponse, error) {
-	cacheKey := fmt.Sprintf("weather-%s-%s", w.Location, w.Units)
+	cacheKey := fmt.Sprintf("weather-%s-%s", w.config.Location, w.config.Units)
 	if cachedData, found := w.cache.Get(cacheKey); found {
 		return cachedData.(WeatherResponse), nil
 	}
 
 	url := fmt.Sprintf(
 		"https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=%s",
-		w.Location,
-		w.ApiKey,
-		w.Units,
+		w.config.Location,
+		w.apiKey,
+		w.config.Units,
 	)
 
 	resp, err := http.Get(url)
@@ -120,11 +119,16 @@ func (w *WeatherProvider) renderWeather(weather WeatherResponse) ([]byte, error)
 
 	dc.DrawString(weather.Name, 5, 10)
 
-	currentTime := time.Now().Format("15:04")
+	loc, err := time.LoadLocation(w.config.TimeZone)
+	if err != nil {
+		return nil, err
+	}
+
+	currentTime := time.Now().In(loc).Format("15:04")
 	dc.DrawStringAnchored(currentTime, float64(constants.DISPLAY_WIDTH-5), 10, 1.0, 0)
 
 	tempUnit := "°C"
-	if w.Units == "imperial" {
+	if w.config.Units == "imperial" {
 		tempUnit = "°F"
 	}
 
@@ -139,7 +143,7 @@ func (w *WeatherProvider) renderWeather(weather WeatherResponse) ([]byte, error)
 	}
 
 	var weatherInfo string
-	if w.Units == "imperial" {
+	if w.config.Units == "imperial" {
 		weatherInfo = fmt.Sprintf("H:%d%% W:%.1fmph", weather.Main.Humidity, weather.Wind.Speed)
 	} else {
 		weatherInfo = fmt.Sprintf("H:%d%% W:%.1fm/s", weather.Main.Humidity, weather.Wind.Speed)

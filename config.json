@@ -7,7 +7,8 @@
   "providers": {
     "weather": {
       "location": "Vilnius,lt",
-      "units": "metric"
+      "units": "metric",
+      "timeZone": "Europe/Vilnius"
     },
     "bsky": {
       "feed": "at://did:plc:oio4hkxaop4ao4wz2pp3f4cr/app.bsky.feed.generator/build",
@@ -19,7 +20,9 @@
         "https://nerijusdulke.lt/data/images/release-button-pic.jpg"
       ]
     },
-    "time": {},
+    "time": {
+      "timeZone": "Europe/Vilnius"
+    },
     "posthog": {
       "insights": [
         {
