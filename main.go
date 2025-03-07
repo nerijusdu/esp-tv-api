@@ -99,6 +99,6 @@ func main() {
 		port = config.Server.Port
 	}
 
-	fmt.Printf("Listening on :%d\n", port)
+	fmt.Printf("Listening on port :%d\n", port)
 	http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 }
