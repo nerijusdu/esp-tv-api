@@ -23,7 +23,7 @@ var providerMap = map[string]providers.Provider{
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		panic(err)
+		fmt.Println("Error loading .env file", err)
 	}
 
 	config, err := util.LoadConfig()
