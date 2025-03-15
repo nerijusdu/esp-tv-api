@@ -1,0 +1,44 @@
+name: Vesa release
+
+on:
+  workflow_dispatch:
+
+env:
+  TEMPLATE_ID: a410df84-e04b-4a13-b176-db40c9b2b5be
+  API_URL: ${{ secrets.VESA_API_URL }}
+  REGISTRY_URL: nerijus.azurecr.io
+  REGISTRY_USER: nerijus
+  VESA_CLIENT_ID: github
+  IMAGE_NAME: esp-tv-api
+  TAG: latest
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build image
+        run: docker build . --file Dockerfile --tag $IMAGE_NAME
+
+      - uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY_URL }}
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASS }}
+
+      - name: Push image to container registry
+        run: |
+          IMAGE_ID=$REGISTRY_URL/$IMAGE_NAME
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo TAG=$TAG
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$TAG
+          docker push $IMAGE_ID:$TAG
+      - name: Use latest docker image
+        uses: distributhor/workflow-webhook@v3
+        with:
+          webhook_url: ${{ env.API_URL }}/api/templates/${{ env.TEMPLATE_ID }}/update?tag=${{ env.TAG }}
+          webhook_auth_type: bearer
+          webhook_auth: ${{ secrets.VESA_CLIENT_SECRET }}

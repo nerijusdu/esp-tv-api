@@ -15,7 +15,13 @@ type Config struct {
 }
 
 func LoadConfig() (Config, error) {
-	file, err := os.ReadFile("config.json")
+	configDir := os.Getenv("CONFIG_DIR")
+	configFile := "config.json"
+	if configDir != "" {
+		configFile = configDir + "/" + configFile
+	}
+
+	file, err := os.ReadFile(configFile)
 	var config Config
 	if err != nil {
 		return config, err
